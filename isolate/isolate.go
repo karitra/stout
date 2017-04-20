@@ -21,11 +21,13 @@ type (
 		Spool(ctx context.Context, name string, opts RawProfile) error
 		Spawn(ctx context.Context, config SpawnConfig, output io.Writer) (Process, error)
 		Inspect(ctx context.Context, workerid string) ([]byte, error)
+		Metrics(ctx context.Context, ids []string) (WorkersMetrics, error)
 		Close() error
 	}
 
 	ResponseStream interface {
 		Write(ctx context.Context, num uint64, data []byte) error
+		WriteMessage(ctx context.Context, num uint64, packedPayload []byte) error
 		Error(ctx context.Context, num uint64, code [2]int, msg string) error
 		Close(ctx context.Context, num uint64) error
 	}

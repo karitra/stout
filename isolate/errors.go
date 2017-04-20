@@ -17,6 +17,7 @@ const (
 	codeUnknownIsolate
 	codeSpoolingFailed
 	codeSpawningFailed
+	codeMetricsFailed
 	codeOutputError
 	codeKillError
 	codeSpoolCancellationError
@@ -28,6 +29,7 @@ var (
 	errUnknownIsolate         = [2]int{isolateErrCategory, codeUnknownIsolate}
 	errSpoolingFailed         = [2]int{isolateErrCategory, codeSpoolingFailed}
 	errSpawningFailed         = [2]int{isolateErrCategory, codeSpawningFailed}
+	errMetricsError           = [2]int{isolateErrCategory, codeMetricsFailed}
 	errOutputError            = [2]int{isolateErrCategory, codeOutputError}
 	errKillError              = [2]int{isolateErrCategory, codeKillError}
 	errSpoolCancellationError = [2]int{isolateErrCategory, codeSpoolCancellationError}

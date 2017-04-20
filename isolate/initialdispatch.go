@@ -1,6 +1,7 @@
 package isolate
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"reflect"
@@ -24,6 +25,12 @@ const (
 	replySpawnWrite = 0
 	replySpawnError = 1
 	replySpawnClose = 2
+
+	mets = 2 // should be 'metrics', but such a naming conflicts with package name
+
+	replyMetricsWrite = 0
+	replyMetricsOk    = 1
+	replyMetricsError = 2
 )
 
 var (
@@ -31,6 +38,7 @@ var (
 	ErrInvalidArgsNum = errors.New("invalid arguments number")
 	_onSpoolArgsNum   = uint32(reflect.TypeOf(new(initialDispatch).onSpool).NumIn())
 	_onSpawnArgsNum   = uint32(reflect.TypeOf(new(initialDispatch).onSpawn).NumIn())
+	_onMetricsArgsNum = uint32(reflect.TypeOf(new(initialDispatch).onMetrics).NumIn())
 )
 
 func checkSize(num uint32, r *msgp.Reader) error {
@@ -83,6 +91,8 @@ func newInitialDispatch(ctx context.Context, stream ResponseStream) Dispatcher {
 }
 
 func (d *initialDispatch) Handle(id uint64, r *msgp.Reader) (Dispatcher, error) {
+	log.G(d.ctx).Debugf("Handle id = %d", id)
+
 	var err error
 	switch id {
 	case spool:
@@ -155,6 +165,19 @@ func (d *initialDispatch) Handle(id uint64, r *msgp.Reader) (Dispatcher, error) 
 		}
 
 		return d.onSpawn(rawProfile, name, executable, args, env)
+	case mets:
+
+		if err = checkSize(_onMetricsArgsNum, r); err != nil {
+			return nil, err
+		}
+
+		var query MetricsQuery
+		if err = msgp.Decode(r, &query); err != nil {
+			return nil, err
+		}
+
+		log.G(d.ctx).Debugf("metrics query array len = %d items", len(query))
+		return d.onMetrics(query)
 	default:
 		return nil, fmt.Errorf("unknown transition id: %d", id)
 	}
@@ -266,6 +289,39 @@ func (d *initialDispatch) onSpawn(opts *cocaineProfile, name, executable string,
 	}()
 
 	return newSpawnDispatch(d.ctx, cancelSpawn, prCh, &flagKilled, d.stream), nil
+}
+
+func (d *initialDispatch) onMetrics(query MetricsQuery) (Dispatcher, error) {
+
+	ctx, _ := context.WithCancel(d.ctx)
+	go func() {
+
+		// TODO
+		// boxes := getBoxes(d.ctx)
+		boxes := getMockBoxes(d.ctx)
+		response := MetricsResponse{}
+
+		for itype, box := range boxes {
+			metrics, err := box.Metrics(d.ctx, query)
+			if err != nil {
+				// TODO: compose error messages
+				continue
+			}
+
+			for id, met := range metrics {
+				response[id] = map[string]MetricsMapping{}
+				response[id][itype] = met
+			}
+
+			buf := new(bytes.Buffer)
+			msgp.Encode(buf, response)
+
+			d.stream.WriteMessage(d.ctx, replyMetricsWrite, buf.Bytes())
+			log.G(d.ctx).Debugf("metrics processing done, response size %d byte(s)", len(buf.Bytes()))
+		}
+	}()
+
+	return newMetricsDispatch(ctx, d.stream), nil
 }
 
 type OutputCollector struct {

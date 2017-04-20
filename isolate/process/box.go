@@ -292,6 +292,10 @@ func (b *Box) Inspect(ctx context.Context, worker string) ([]byte, error) {
 	return []byte("{}"), nil
 }
 
+func (b *Box) Metrics(ctx context.Context, ids []string) (isolate.WorkersMetrics, error) {
+	return isolate.WorkersMetrics{}, nil
+}
+
 func (b *Box) fetch(ctx context.Context, appname string) ([]byte, error) {
 	return b.storage.Spool(ctx, appname)
 }

@@ -549,6 +549,10 @@ func (b *Box) Inspect(ctx context.Context, workeruuid string) ([]byte, error) {
 	return []byte(""), nil
 }
 
+func (b *Box) Metrics(ctx context.Context, ids []string) (isolate.WorkersMetrics, error) {
+	return isolate.WorkersMetrics{}, nil
+}
+
 // Close releases all resources such as idle connections from http.Transport
 func (b *Box) Close() error {
 	b.transport.CloseIdleConnections()

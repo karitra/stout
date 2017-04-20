@@ -251,6 +251,10 @@ func (b *Box) Inspect(ctx context.Context, workeruuid string) ([]byte, error) {
 	return []byte("{}"), nil
 }
 
+func (b *Box) Metrics(ctx context.Context, ids []string) (isolate.WorkersMetrics, error) {
+	return isolate.WorkersMetrics{}, nil
+}
+
 // Spool spools an image with a tag latest
 func (b *Box) Spool(ctx context.Context, name string, opts isolate.RawProfile) (err error) {
 	profile, err := decodeProfile(opts)

@@ -31,7 +31,16 @@ type testDownstream struct {
 	ch chan testDownstreamItem
 }
 
+func (t *testDownstream) WriteMessage(ctx context.Context, code uint64, data []byte) error {
+	t.ch <- testDownstreamItem{code, []interface{}{data}}
+	return nil
+}
+
 func (t *testDownstream) Write(ctx context.Context, code uint64, data []byte) error {
+	p := msgpackBytePool.Get().([]byte)[:0]
+	defer msgpackBytePool.Put(p)
+
+	p = msgp.AppendStringFromBytes(p, data)
 	t.ch <- testDownstreamItem{code, []interface{}{data}}
 	return nil
 }
@@ -66,6 +75,10 @@ func (b *testBox) Spawn(ctx context.Context, config SpawnConfig, wr io.Writer) (
 
 func (b *testBox) Inspect(ctx context.Context, workerid string) ([]byte, error) {
 	return []byte("{}"), nil
+}
+
+func (b *testBox) Metrics(ctx context.Context, query []string) (WorkersMetrics, error) {
+	return WorkersMetrics{}, nil
 }
 
 func (b *testBox) Close() error {
