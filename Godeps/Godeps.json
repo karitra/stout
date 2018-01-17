@@ -237,6 +237,10 @@
 			"Rev": "eeba7bd0dd01ace6e690fa833b3f22aaec29af43"
 		},
 		{
+			"ImportPath": "github.com/shirou/gopsutil",
+			"Rec": "7ec06ec280df1dd1f08befc535049d49d63ae18a"
+		},
+		{
 			"ImportPath": "github.com/stretchr/testify/assert",
 			"Comment": "v1.1.3-16-g6cb3b85",
 			"Rev": "6cb3b85ef5a0efef77caef88363ec4d4b5c0976d"
